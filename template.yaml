@@ -1,0 +1,141 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: >-
+  A beginner Amazon Bedrock knowledge base. Documents live in S3, and their
+  embeddings live in S3 Vectors. Delete this stack when you finish.
+
+Resources:
+  # ---------------------------------------------------------------------------
+  # 1. Where your documents live.
+  # You upload files here. Bedrock reads them from this bucket.
+  # CloudFormation cannot delete a bucket that has files in it, so empty this
+  # bucket before you delete the stack.
+  # ---------------------------------------------------------------------------
+  DocumentsBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+
+  # ---------------------------------------------------------------------------
+  # 2. Where the embeddings live.
+  # An embedding is text turned into a list of numbers. A vector bucket stores
+  # those lists. You pay for what you store and query. No server runs between
+  # queries, so a small test like this one costs very little.
+  # ---------------------------------------------------------------------------
+  VectorBucket:
+    Type: AWS::S3Vectors::VectorBucket
+
+  # ---------------------------------------------------------------------------
+  # 3. The index inside the vector bucket.
+  # The index is what makes "find the text most similar to this question" fast.
+  # ---------------------------------------------------------------------------
+  VectorIndex:
+    Type: AWS::S3Vectors::Index
+    Properties:
+      VectorBucketArn: !GetAtt VectorBucket.VectorBucketArn
+      IndexName: documents
+      DataType: float32
+      # Must match the Dimensions value in the knowledge base below.
+      Dimension: 1024
+      DistanceMetric: cosine
+      MetadataConfiguration:
+        # Bedrock stores each chunk of text in these two fields. They are too
+        # large to filter on, so they are marked as non-filterable.
+        NonFilterableMetadataKeys:
+          - AMAZON_BEDROCK_TEXT
+          - AMAZON_BEDROCK_METADATA
+
+  # ---------------------------------------------------------------------------
+  # 4. The permissions Bedrock gets.
+  # This role lets Bedrock do exactly three jobs in your account, and no more.
+  # It is the reason AWS asks you to tick the IAM box when you deploy.
+  # ---------------------------------------------------------------------------
+  KnowledgeBaseRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: bedrock.amazonaws.com
+            Action: sts:AssumeRole
+            Condition:
+              StringEquals:
+                aws:SourceAccount: !Ref AWS::AccountId
+              ArnLike:
+                aws:SourceArn: !Sub arn:${AWS::Partition}:bedrock:${AWS::Region}:${AWS::AccountId}:knowledge-base/*
+      Policies:
+        - PolicyName: knowledge-base-access
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              # Job one: turn text into embeddings.
+              - Effect: Allow
+                Action: bedrock:InvokeModel
+                Resource: !Sub arn:${AWS::Partition}:bedrock:${AWS::Region}::foundation-model/amazon.titan-embed-text-v2:0
+              # Job two: read your documents.
+              - Effect: Allow
+                Action: s3:ListBucket
+                Resource: !GetAtt DocumentsBucket.Arn
+              - Effect: Allow
+                Action: s3:GetObject
+                Resource: !Sub ${DocumentsBucket.Arn}/*
+              # Job three: store and search the embeddings.
+              - Effect: Allow
+                Action:
+                  - s3vectors:PutVectors
+                  - s3vectors:GetVectors
+                  - s3vectors:DeleteVectors
+                  - s3vectors:QueryVectors
+                  - s3vectors:GetIndex
+                Resource: !GetAtt VectorIndex.IndexArn
+
+  # ---------------------------------------------------------------------------
+  # 5. The knowledge base.
+  # This connects the embedding model to the index.
+  # ---------------------------------------------------------------------------
+  KnowledgeBase:
+    Type: AWS::Bedrock::KnowledgeBase
+    Properties:
+      Name: !Sub ${AWS::StackName}-knowledge-base
+      RoleArn: !GetAtt KnowledgeBaseRole.Arn
+      KnowledgeBaseConfiguration:
+        Type: VECTOR
+        VectorKnowledgeBaseConfiguration:
+          EmbeddingModelArn: !Sub arn:${AWS::Partition}:bedrock:${AWS::Region}::foundation-model/amazon.titan-embed-text-v2:0
+          EmbeddingModelConfiguration:
+            BedrockEmbeddingModelConfiguration:
+              # Must match the Dimension value in the index above.
+              Dimensions: 1024
+              EmbeddingDataType: FLOAT32
+      StorageConfiguration:
+        Type: S3_VECTORS
+        S3VectorsConfiguration:
+          IndexArn: !GetAtt VectorIndex.IndexArn
+
+  # ---------------------------------------------------------------------------
+  # 6. The data source.
+  # This tells the knowledge base which bucket to read. Deploying this stack
+  # does not read your documents: upload them, then press Sync in the console.
+  # ---------------------------------------------------------------------------
+  DataSource:
+    Type: AWS::Bedrock::DataSource
+    Properties:
+      Name: documents
+      KnowledgeBaseId: !GetAtt KnowledgeBase.KnowledgeBaseId
+      DataSourceConfiguration:
+        Type: S3
+        S3Configuration:
+          BucketArn: !GetAtt DocumentsBucket.Arn
+
+Outputs:
+  DocumentsBucketName:
+    Description: Upload your documents to this bucket.
+    Value: !Ref DocumentsBucket
+  KnowledgeBaseId:
+    Description: Find the knowledge base with this ID in the Bedrock console.
+    Value: !GetAtt KnowledgeBase.KnowledgeBaseId
