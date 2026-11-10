@@ -1,0 +1,90 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 600" role="img" aria-labelledby="title desc" font-family="Helvetica, Arial, sans-serif">
+  <title id="title">Architecture of the Bedrock knowledge base starter</title>
+  <desc id="desc">You upload documents to an S3 bucket. A sync reads them through the data source into the knowledge base, which uses Titan to create embeddings and stores them in S3 Vectors. When you ask a question, the knowledge base searches S3 Vectors and Nova 2 Lite writes an answer with citations.</desc>
+  <defs>
+    <marker id="end" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#11202a"/>
+    </marker>
+    <style>
+      .box { fill: #ffffff; stroke: #11202a; stroke-width: 2; }
+      .kb { fill: #dcebf1; stroke: #11202a; stroke-width: 3; }
+      .frame { fill: #f6f4ef; stroke: #11202a; stroke-width: 2; stroke-dasharray: 9 7; }
+      .models { fill: #f3e7cf; stroke: #11202a; stroke-width: 2; }
+      .name { font-size: 18px; font-weight: 700; fill: #11202a; text-anchor: middle; }
+      .note { font-size: 15px; fill: #33444e; text-anchor: middle; }
+      .frame-label { font-size: 17px; font-weight: 700; fill: #11202a; }
+      .flow { font-size: 15px; fill: #11202a; }
+      .load { stroke: #11202a; stroke-width: 2.5; fill: none; marker-end: url(#end); }
+      .ask { stroke: #11202a; stroke-width: 2.5; fill: none; stroke-dasharray: 3 6; stroke-linecap: round; marker-end: url(#end); }
+    </style>
+  </defs>
+
+  <rect width="1200" height="600" fill="#ffffff"/>
+
+  <!-- The stack -->
+  <rect class="frame" x="220" y="24" width="950" height="330" rx="10"/>
+  <text class="frame-label" x="240" y="54">Created by template.yaml (one CloudFormation stack)</text>
+
+  <!-- The models -->
+  <rect class="models" x="220" y="392" width="950" height="180" rx="10"/>
+  <text class="frame-label" x="240" y="424">Amazon Bedrock models (provided by AWS, not in the stack)</text>
+
+  <!-- You -->
+  <rect class="box" x="30" y="115" width="110" height="90" rx="8"/>
+  <text class="name" x="85" y="167">You</text>
+
+  <!-- Row of resources -->
+  <rect class="box" x="250" y="115" width="170" height="90" rx="8"/>
+  <text class="name" x="335" y="154">S3 bucket</text>
+  <text class="note" x="335" y="178">your documents</text>
+
+  <rect class="box" x="480" y="115" width="170" height="90" rx="8"/>
+  <text class="name" x="565" y="154">Data source</text>
+  <text class="note" x="565" y="178">which bucket to read</text>
+
+  <rect class="kb" x="710" y="115" width="170" height="90" rx="8"/>
+  <text class="name" x="795" y="154">Knowledge</text>
+  <text class="name" x="795" y="178">base</text>
+
+  <rect class="box" x="940" y="115" width="200" height="90" rx="8"/>
+  <text class="name" x="1040" y="154">S3 Vectors</text>
+  <text class="note" x="1040" y="178">bucket and index</text>
+
+  <rect class="box" x="250" y="245" width="290" height="80" rx="8"/>
+  <text class="name" x="395" y="278">IAM role</text>
+  <text class="note" x="395" y="302">what Bedrock may do in your account</text>
+
+  <!-- Models -->
+  <rect class="box" x="640" y="450" width="185" height="96" rx="8"/>
+  <text class="name" x="732" y="486">Titan Text</text>
+  <text class="name" x="732" y="508">Embeddings v2</text>
+  <text class="note" x="732" y="532">text into numbers</text>
+
+  <rect class="box" x="845" y="450" width="185" height="96" rx="8"/>
+  <text class="name" x="937" y="492">Nova 2 Lite</text>
+  <text class="note" x="937" y="518">writes the answer</text>
+
+  <!-- Loading documents (solid) -->
+  <path class="load" d="M140 160 H248"/>
+  <text class="flow" x="180" y="146" text-anchor="middle">1 Upload</text>
+  <path class="load" d="M420 160 H478"/>
+  <text class="flow" x="450" y="146" text-anchor="middle">2 Sync</text>
+  <path class="load" d="M650 160 H708"/>
+  <path class="load" d="M750 205 V448"/>
+  <path class="load" d="M880 160 H938" marker-start="url(#end)"/>
+  <text class="flow" x="910" y="130" text-anchor="middle">store,</text>
+  <text class="flow" x="910" y="148" text-anchor="middle">search</text>
+
+  <!-- Asking a question (dotted) -->
+  <path class="ask" d="M85 113 V88 H795 V113" marker-start="url(#end)"/>
+  <text class="flow" x="500" y="80" text-anchor="middle">3 Ask a question, get an answer with citations</text>
+  <path class="ask" d="M845 205 V448"/>
+  <text class="flow" x="740" y="290" text-anchor="end">documents and questions</text>
+  <text class="flow" x="857" y="290">chunks and your question</text>
+
+  <!-- Key -->
+  <path class="load" d="M30 300 H90"/>
+  <text class="flow" x="100" y="305">load</text>
+  <path class="ask" d="M30 335 H90"/>
+  <text class="flow" x="100" y="340">ask</text>
+</svg>
