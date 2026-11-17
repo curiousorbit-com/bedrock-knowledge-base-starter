@@ -8,6 +8,10 @@ Built for the TMU student AWS group session on 2026-11-19.
 
 The template was tested from create to delete in `ca-central-1` on a paid AWS account on 2026-11-10. It has not been tested on a new free-plan account yet.
 
+## Before you start: create an AWS account
+
+If you do not have an AWS account, follow [ACCOUNT-CREATION.md](ACCOUNT-CREATION.md) before the session. Use the sign-up page it names, because the other one cannot run this workshop.
+
 ## Before you start: set a budget alert
 
 The AWS free tier does not cover everything in this repo. Bedrock model calls are [charged by use](https://aws.amazon.com/bedrock/pricing/) and come out of your [account credits](https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/free-tier-plans.html). Set a budget alert first.
@@ -87,6 +91,7 @@ Do this when you finish, so nothing keeps costing money.
 
 ## What is in this repo
 
+- `ACCOUNT-CREATION.md`: how to create an AWS account that can run this workshop.
 - `template.yaml`: the stack, with a comment on each of its six resources.
 - `sample-data/`: the five documents to upload.
 - `workshop/test-questions.md`: questions and expected answers.
