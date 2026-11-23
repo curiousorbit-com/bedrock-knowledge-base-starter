@@ -43,7 +43,7 @@ On this GitHub page, choose **Code**, then **Download ZIP**, and unzip it.
 
 1. Open **CloudFormation** in the AWS console.
 2. Choose **Create stack**, then **With new resources (standard)**.
-3. Choose **Upload a template file**, and select `template.yaml`.
+3. Under **Prepare template**, keep **Choose an existing template**. Under **Template source**, choose **Upload a template file**, choose **Choose file**, and select `template.yaml`. Choose **Next**.
 4. Name the stack, for example `my-knowledge-base`, and choose **Next** until you reach the last page.
 5. Tick the box that says CloudFormation might create IAM resources. The template creates one role, and the comments in `template.yaml` explain it.
 6. Choose **Submit**, and wait for `CREATE_COMPLETE`.
@@ -51,7 +51,7 @@ On this GitHub page, choose **Code**, then **Download ZIP**, and unzip it.
 
 ### 3. Upload the documents and sync
 
-1. Open **S3**, and open the bucket from the Outputs tab.
+1. Copy `DocumentsBucketName` from the Outputs tab. Open **S3**, paste the name into the search box, and open the bucket.
 2. Upload the five files from the `sample-data` folder. Do not upload anything from `workshop`, because it contains the answers.
 3. Open **Amazon Bedrock**, choose **Knowledge bases**, and open the one named after your stack.
 4. Select the data source, and choose **Sync**. Wait for it to finish.
