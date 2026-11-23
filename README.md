@@ -89,6 +89,28 @@ Do this when you finish, so nothing keeps costing money.
 2. Open **CloudFormation**, select your stack, and choose **Delete**.
 3. Wait until the stack is gone from the list.
 
+## Troubleshooting
+
+### The stack is stuck in `DELETE_FAILED`
+
+This usually means the documents bucket still had files in it when you deleted the stack. CloudFormation [cannot delete an S3 bucket that has objects in it](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/troubleshooting.html#troubleshooting-errors-delete-stack-fails). The rest of the stack stays until you fix that.
+
+1. Open **S3**, select your documents bucket, choose **Empty**, and confirm.
+2. Open **CloudFormation**. Check that the Region at the top of the page is the one you deployed to.
+3. If the stack is not in the list, change the **Filter status** drop-down so it shows failed stacks.
+4. Select the stack, and choose **Delete** again. Wait until it is gone from the list.
+5. Open **Amazon Bedrock**, choose **Knowledge bases**, and check that the one named after your stack is gone.
+
+If the stack fails again, open its **Events** tab and read the status reason on the `DELETE_FAILED` line. It names the resource that could not be deleted.
+
+### Sync fails with "Too many requests"
+
+The full message is "Too many requests. Please wait before trying again." Bedrock returns this kind of error when a request [goes over a quota for your account](https://docs.aws.amazon.com/bedrock/latest/userguide/troubleshooting-api-error-codes.html). It is not a permissions problem, so do not change the stack.
+
+1. Check that no sync is still running on the data source. Choose **Sync** once, not repeatedly.
+2. Wait 15 minutes, and choose **Sync** again.
+3. If it fails again, your account may have a lower quota than the sync needs, and waiting will not fix that. Open **Service Quotas**, choose **Amazon Bedrock**, and search for `ingestion` to see your values. If a quota is adjustable, you can request an increase from that page.
+
 ## What is in this repo
 
 - `ACCOUNT-CREATION.md`: how to create an AWS account that can run this workshop.
